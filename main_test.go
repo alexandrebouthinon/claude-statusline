@@ -27,7 +27,7 @@ func TestRenderSample(t *testing.T) {
 		t.Fatal(err)
 	}
 	out := render(p, time.Unix(p.RateLimits.FiveHour.ResetsAt-3600, 0))
-	for _, want := range []string{"Opus 5.5", "42k", "/1M", "22%", "1h00", "$0.22"} {
+	for _, want := range []string{"Opus 5.5", "42k", "/1M", "22%", "1h00", "~$0.22"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("output missing %q: %q", want, out)
 		}

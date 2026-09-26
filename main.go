@@ -80,7 +80,7 @@ func render(p payload, now time.Time) string {
 		parts = append(parts, "5h "+limitSegment(*rl, now))
 	}
 	if p.Cost.TotalCostUSD > 0 {
-		parts = append(parts, fmt.Sprintf("%s$%.2f%s", dim, p.Cost.TotalCostUSD, reset))
+		parts = append(parts, fmt.Sprintf("%s~$%.2f%s", dim, p.Cost.TotalCostUSD, reset))
 	}
 	return strings.Join(parts, " │ ")
 }
