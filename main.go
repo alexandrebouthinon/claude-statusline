@@ -76,7 +76,17 @@ func main() {
 }
 
 func render(p payload, now time.Time) string {
-	return pills(segments(p, now), " ")
+	return layout(segments(p, now), runningAgents(p, now))
+}
+
+// layout puts the session pills on the first row and the subagent team, if
+// any, on a second row so it doesn't crowd the core segments.
+func layout(segs []segment, agents map[string]int) string {
+	out := pills(segs, " ")
+	if team := teamLine(agents); team != "" {
+		out += "\n" + team
+	}
+	return out
 }
 
 func segments(p payload, now time.Time) []segment {
@@ -100,7 +110,6 @@ func segments(p payload, now time.Time) []segment {
 	if rl := p.RateLimits.SevenDay; rl != nil {
 		segs = append(segs, limitSegment(*rl, now, iconWeek, theme.week))
 	}
-	segs = append(segs, agentSegments(runningAgents(p, now))...)
 	if p.Cost.TotalCostUSD > 0 {
 		segs = append(segs, segment{fmt.Sprintf("~%s%.2f", iconDollar, p.Cost.TotalCostUSD), theme.costFg, theme.costBg})
 	}

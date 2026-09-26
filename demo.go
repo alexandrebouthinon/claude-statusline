@@ -18,11 +18,8 @@ func runDemo() {
 		p.ContextWindow.CurrentUsage = &usage{CacheRead: ctx}
 		p.RateLimits.FiveHour = &rateLimit{UsedPct: five, ResetsAt: now.Add(3*time.Hour + 54*time.Minute).Unix()}
 		p.RateLimits.SevenDay = &rateLimit{UsedPct: week, ResetsAt: now.Add(76 * time.Hour).Unix()}
-		segs := segments(p, now)
-		// Agent pills normally come from hook markers; inject them before the cost pill.
-		last := len(segs) - 1
-		segs = append(segs[:last], append(agentSegments(agents), segs[last])...)
-		return pills(segs, " ")
+		// Agents normally come from hook markers; pass them in directly.
+		return layout(segments(p, now), agents)
 	}
 	fmt.Println(state("Opus 5.5 (1M context)", 46_000, 25, 12, nil, 0.67))
 	fmt.Println(state("Sonnet 5", 88_000, 62, 41, map[string]int{"haiku": 3, "sonnet": 1}, 2.14))

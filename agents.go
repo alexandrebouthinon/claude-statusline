@@ -105,10 +105,13 @@ func agentModel(base string) string {
 			return entry.Message.Model
 		}
 	}
+	// A read error just means no model was found: the caller falls back to the parent's.
+	_ = sc.Err()
 	return ""
 }
 
-var families = []string{"haiku", "sonnet", "opus", "fable"}
+// families is ordered from most to least capable, which is the team row order.
+var families = []string{"fable", "opus", "sonnet", "haiku"}
 
 // modelFamily maps an alias or model ID to its family; "inherit" and unknown
 // values fall back to the parent session's model.
@@ -124,13 +127,17 @@ func modelFamily(model, parent string) string {
 	return "other"
 }
 
-// agentSegments renders one pill per model family, colored like the model pill.
-func agentSegments(counts map[string]int) []segment {
-	var segs []segment
+// teamLine renders running subagents on their own row, one colored dot per
+// agent grouped by model family, or "" when none are running.
+func teamLine(counts map[string]int) string {
+	var groups []string
 	for _, f := range append(families, "other") {
 		if n := counts[f]; n > 0 {
-			segs = append(segs, segment{text: fmt.Sprintf("%s %s %d", iconAgents, strings.ToUpper(f[:1])+f[1:], n), bg: familyColor(f)})
+			groups = append(groups, fgHex(familyColor(f))+strings.Repeat("●", n)+" "+strings.ToUpper(f[:1])+f[1:]+reset)
 		}
 	}
-	return segs
+	if len(groups) == 0 {
+		return ""
+	}
+	return fmt.Sprintf(" %s└─%s %s%s team%s  %s", fgHex(theme.costBg), reset, fgHex(theme.costFg), iconAgents, reset, strings.Join(groups, "  "))
 }

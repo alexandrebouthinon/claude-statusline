@@ -16,7 +16,7 @@ It starts in about a millisecond, uses no `jq` and makes no API calls, so it can
 | Context | Tokens used out of the window size. Turns orange at 100k with a `/compact` reminder, and red at 200k |
 | 5h limit | Share of the 5-hour quota used, and time left before it resets |
 | Weekly limit | Share of the 7-day quota used, and time left before it resets |
-| Agents | Subagents running right now, counted per model family. Each family keeps its model color |
+| Team | Second row listing running subagents: one dot per agent, grouped by model family from most to least capable, in the model colors |
 | Cost | Session cost, prefixed with `~` because it is an API-equivalent estimate, not an invoice |
 
 Model colors (Tokyo Night): **Haiku** teal · **Sonnet** orange · **Opus** purple · **Fable** pink.
@@ -47,7 +47,7 @@ Then add this to `~/.claude/settings.json`:
 }
 ```
 
-The two hooks are only needed for the agents pill, because Claude Code does not pass running subagents to the status line.
+The two hooks are only needed for the team row, because Claude Code does not pass running subagents to the status line.
 Each hook drops or removes a marker under `$XDG_RUNTIME_DIR/claude-statusline/<session>/`.
 The status line reads each agent's model from its transcript metadata.
 

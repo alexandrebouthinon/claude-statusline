@@ -112,3 +112,23 @@ func hook(t *testing.T, input string) {
 	defer func() { os.Stdin = stdin }()
 	runHook()
 }
+
+func TestLayoutTeamRow(t *testing.T) {
+	segs := []segment{{"core", theme.light, theme.dir}}
+	if out := layout(segs, nil); strings.Contains(out, "\n") {
+		t.Errorf("team row without agents: %q", out)
+	}
+	out := layout(segs, map[string]int{"haiku": 3, "sonnet": 1})
+	lines := strings.Split(out, "\n")
+	if len(lines) != 2 {
+		t.Fatalf("want 2 rows, got %d: %q", len(lines), out)
+	}
+	for _, want := range []string{"team", "●●● Haiku", "● Sonnet"} {
+		if !strings.Contains(lines[1], want) {
+			t.Errorf("team row missing %q: %q", want, lines[1])
+		}
+	}
+	if strings.Index(lines[1], "Sonnet") > strings.Index(lines[1], "Haiku") {
+		t.Errorf("team row not ordered by capability: %q", lines[1])
+	}
+}

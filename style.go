@@ -75,15 +75,15 @@ func bgHex(hex string) string {
 func powerline(segs []segment, sep string) string {
 	var b strings.Builder
 	for i, s := range segs {
-		b.WriteString(bgHex(s.bg) + fgHex(textOn(s.bg)) + " " + s.text + " ")
+		fmt.Fprintf(&b, "%s%s %s ", bgHex(s.bg), fgHex(textOn(s.bg)), s.text)
 		switch {
 		case i+1 < len(segs) && segs[i+1].bg == s.bg:
 			// Same background on both sides would hide the arrow: fall back to a thin divider.
-			b.WriteString(fgHex(textOn(s.bg)) + thinOf(sep))
+			fmt.Fprintf(&b, "%s%s", fgHex(textOn(s.bg)), thinOf(sep))
 		case i+1 < len(segs):
-			b.WriteString(bgHex(segs[i+1].bg) + fgHex(s.bg) + sep)
+			fmt.Fprintf(&b, "%s%s%s", bgHex(segs[i+1].bg), fgHex(s.bg), sep)
 		default:
-			b.WriteString(reset + fgHex(s.bg) + sep + reset)
+			fmt.Fprintf(&b, "%s%s%s%s", reset, fgHex(s.bg), sep, reset)
 		}
 	}
 	return b.String()
@@ -129,7 +129,7 @@ func pills(segs []segment, gap string) string {
 		if i > 0 {
 			b.WriteString(gap)
 		}
-		b.WriteString(fgHex(s.bg) + capRound + bgHex(s.bg) + fgHex(textOn(s.bg)) + " " + s.text + " " + reset + fgHex(s.bg) + sepRound + reset)
+		fmt.Fprintf(&b, "%s%s%s%s %s %s%s%s%s", fgHex(s.bg), capRound, bgHex(s.bg), fgHex(textOn(s.bg)), s.text, reset, fgHex(s.bg), sepRound, reset)
 	}
 	return b.String()
 }
