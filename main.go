@@ -49,6 +49,10 @@ type rateLimit struct {
 }
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "--glyphs" {
+		runGlyphDemo()
+		return
+	}
 	if len(os.Args) > 1 && os.Args[1] == "--demo" {
 		runDemo()
 		return
@@ -73,7 +77,7 @@ func render(p payload, now time.Time) string {
 	}
 	segs := []segment{
 		{loc, theme.light, theme.dir},
-		{iconRobot + " " + shortModel(p.Model.DisplayName), theme.light, theme.model},
+		{iconModel + " " + shortModel(p.Model.DisplayName), theme.light, theme.model},
 		contextSegment(p),
 	}
 	if rl := p.RateLimits.FiveHour; rl != nil {
@@ -96,10 +100,10 @@ func shortModel(name string) string {
 func contextSegment(p payload) segment {
 	cw := p.ContextWindow
 	if cw.CurrentUsage == nil {
-		return segment{iconGauge + " n/a", theme.dark, theme.ok}
+		return segment{iconContext + " n/a", theme.dark, theme.ok}
 	}
 	used := cw.CurrentUsage.Input + cw.CurrentUsage.CacheCreate + cw.CurrentUsage.CacheRead
-	text := iconGauge + " " + humanTokens(used) + "/" + humanTokens(cw.Size)
+	text := iconContext + " " + humanTokens(used) + "/" + humanTokens(cw.Size)
 	bg := theme.ok
 	switch {
 	case used >= compactThreshold*2:
@@ -114,7 +118,7 @@ func contextSegment(p payload) segment {
 }
 
 func limitSegment(rl rateLimit, now time.Time) segment {
-	text := fmt.Sprintf("%s %.0f%%", iconClock, rl.UsedPct)
+	text := fmt.Sprintf("%s %.0f%%", iconLimit, rl.UsedPct)
 	if rl.ResetsAt > 0 {
 		if left := time.Unix(rl.ResetsAt, 0).Sub(now); left > 0 {
 			text += " · " + shortDuration(left)

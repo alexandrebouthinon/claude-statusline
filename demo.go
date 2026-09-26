@@ -30,3 +30,27 @@ func runDemo() {
 		fmt.Println()
 	}
 }
+
+// runGlyphDemo prints candidate glyphs for each segment role, lettered for picking.
+func runGlyphDemo() {
+	roles := []struct {
+		name, bg string
+		glyphs   []string
+	}{
+		{"Dossier", theme.dir, []string{"", "", "", "\U000f024b"}},
+		{"Branche", theme.dir, []string{"", "", "", "\U000f062c"}},
+		{"Modèle", theme.model, []string{"\U000f06a9", "\U000f09d1", "\U000f0674", ""}},
+		{"Contexte", theme.ok, []string{"\U000f029a", "", "\U000f035b", ""}},
+		{"Limite 5h", theme.limitOK, []string{"", "", "\U000f051f", ""}},
+		{"Coût", theme.costBg, []string{"", "\U000f01c1", ""}},
+		{"Alerte", theme.warn, []string{"", "\U000f0026", ""}},
+	}
+	for _, r := range roles {
+		fmt.Printf("%-10s", r.name)
+		for i, g := range r.glyphs {
+			pill := powerline([]segment{{text: g, bg: r.bg}}, sepRound)
+			fmt.Printf("  %c %s", 'A'+i, pill)
+		}
+		fmt.Println()
+	}
+}
