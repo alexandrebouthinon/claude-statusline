@@ -35,15 +35,17 @@ type palette struct {
 	dir, model              string
 	ok, limitOK, warn, crit string
 	costBg, costFg          string
-	agents                  string
+	week                    string
+	haiku, sonnet, opus     string
+	fable                   string
 }
 
 var palettes = []palette{
-	{"p10k", "#eeeeee", "#1c1c1c", "#0087af", "#5f5faf", "#5faf00", "#87d787", "#d78700", "#d70000", "#444444", "#bcbcbc", "#d75f87"},
-	{"Catppuccin Mocha", "#cdd6f4", "#1e1e2e", "#89b4fa", "#cba6f7", "#a6e3a1", "#94e2d5", "#fab387", "#f38ba8", "#45475a", "#cdd6f4", "#f5c2e7"},
-	{"Tokyo Night", "#c0caf5", "#1a1b26", "#7aa2f7", "#bb9af7", "#9ece6a", "#7dcfff", "#e0af68", "#f7768e", "#414868", "#c0caf5", "#73daca"},
-	{"Nord", "#eceff4", "#2e3440", "#5e81ac", "#b48ead", "#a3be8c", "#88c0d0", "#ebcb8b", "#bf616a", "#3b4252", "#d8dee9", "#8fbcbb"},
-	{"Gruvbox", "#fbf1c7", "#282828", "#458588", "#b16286", "#98971a", "#689d6a", "#d79921", "#cc241d", "#504945", "#ebdbb2", "#d65d0e"},
+	{"p10k", "#eeeeee", "#1c1c1c", "#0087af", "#5f5faf", "#5faf00", "#87d787", "#d78700", "#d70000", "#444444", "#bcbcbc", "#5f87af", "#00afaf", "#d75f00", "#af87d7", "#d7005f"},
+	{"Catppuccin Mocha", "#cdd6f4", "#1e1e2e", "#89b4fa", "#cba6f7", "#a6e3a1", "#94e2d5", "#fab387", "#f38ba8", "#45475a", "#cdd6f4", "#b4befe", "#89dceb", "#eba0ac", "#cba6f7", "#f5c2e7"},
+	{"Tokyo Night", "#c0caf5", "#1a1b26", "#7aa2f7", "#bb9af7", "#9ece6a", "#7dcfff", "#e0af68", "#f7768e", "#414868", "#c0caf5", "#3d59a1", "#73daca", "#ff9e64", "#bb9af7", "#ff007c"},
+	{"Nord", "#eceff4", "#2e3440", "#5e81ac", "#b48ead", "#a3be8c", "#88c0d0", "#ebcb8b", "#bf616a", "#3b4252", "#d8dee9", "#81a1c1", "#8fbcbb", "#d08770", "#b48ead", "#e5a0c0"},
+	{"Gruvbox", "#fbf1c7", "#282828", "#458588", "#b16286", "#98971a", "#689d6a", "#d79921", "#cc241d", "#504945", "#ebdbb2", "#076678", "#8ec07c", "#d65d0e", "#b16286", "#d3869b"},
 }
 
 var theme = palettes[2] // Tokyo Night
@@ -130,4 +132,19 @@ func pills(segs []segment, gap string) string {
 		b.WriteString(fgHex(s.bg) + capRound + bgHex(s.bg) + fgHex(textOn(s.bg)) + " " + s.text + " " + reset + fgHex(s.bg) + sepRound + reset)
 	}
 	return b.String()
+}
+
+// familyColor keeps a model family on the same color everywhere it appears.
+func familyColor(family string) string {
+	switch family {
+	case "haiku":
+		return theme.haiku
+	case "sonnet":
+		return theme.sonnet
+	case "opus":
+		return theme.opus
+	case "fable":
+		return theme.fable
+	}
+	return theme.model
 }

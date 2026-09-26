@@ -91,18 +91,16 @@ func segments(p payload, now time.Time) []segment {
 	}
 	segs := []segment{
 		{loc, theme.light, theme.dir},
-		{iconModel + " " + shortModel(p.Model.DisplayName), theme.light, theme.model},
+		{iconModel + " " + shortModel(p.Model.DisplayName), theme.light, familyColor(modelFamily(p.Model.DisplayName, ""))},
 		contextSegment(p),
 	}
 	if rl := p.RateLimits.FiveHour; rl != nil {
-		segs = append(segs, limitSegment(*rl, now, iconLimit))
+		segs = append(segs, limitSegment(*rl, now, iconLimit, theme.limitOK))
 	}
 	if rl := p.RateLimits.SevenDay; rl != nil {
-		segs = append(segs, limitSegment(*rl, now, iconWeek))
+		segs = append(segs, limitSegment(*rl, now, iconWeek, theme.week))
 	}
-	if s, ok := agentsSegment(runningAgents(p, now)); ok {
-		segs = append(segs, s)
-	}
+	segs = append(segs, agentSegments(runningAgents(p, now))...)
 	if p.Cost.TotalCostUSD > 0 {
 		segs = append(segs, segment{fmt.Sprintf("~%s%.2f", iconDollar, p.Cost.TotalCostUSD), theme.costFg, theme.costBg})
 	}
@@ -137,14 +135,14 @@ func contextSegment(p payload) segment {
 	return segment{text, theme.dark, bg}
 }
 
-func limitSegment(rl rateLimit, now time.Time, icon string) segment {
+func limitSegment(rl rateLimit, now time.Time, icon, okBg string) segment {
 	text := fmt.Sprintf("%s %.0f%%", icon, rl.UsedPct)
 	if rl.ResetsAt > 0 {
 		if left := time.Unix(rl.ResetsAt, 0).Sub(now); left > 0 {
 			text += " · " + shortDuration(left)
 		}
 	}
-	bg := theme.limitOK
+	bg := okBg
 	switch {
 	case rl.UsedPct >= 80:
 		bg = theme.crit

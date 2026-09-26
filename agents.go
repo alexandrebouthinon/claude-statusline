@@ -121,15 +121,13 @@ func modelFamily(model, parent string) string {
 	return "other"
 }
 
-func agentsSegment(counts map[string]int) (segment, bool) {
-	var parts []string
+// agentSegments renders one pill per model family, colored like the model pill.
+func agentSegments(counts map[string]int) []segment {
+	var segs []segment
 	for _, f := range append(families, "other") {
 		if n := counts[f]; n > 0 {
-			parts = append(parts, fmt.Sprintf("%s %d", strings.ToUpper(f[:1])+f[1:], n))
+			segs = append(segs, segment{text: fmt.Sprintf("%s %s %d", iconAgents, strings.ToUpper(f[:1])+f[1:], n), bg: familyColor(f)})
 		}
 	}
-	if len(parts) == 0 {
-		return segment{}, false
-	}
-	return segment{text: iconAgents + " " + strings.Join(parts, " · "), bg: theme.agents}, true
+	return segs
 }

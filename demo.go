@@ -27,6 +27,9 @@ func runDemo() {
 		for _, p := range states {
 			fmt.Printf("  %s\n", render(p, now))
 		}
+		week := limitSegment(rateLimit{UsedPct: 41, ResetsAt: now.Add(76 * time.Hour).Unix()}, now, iconWeek, theme.week)
+		agents := agentSegments(map[string]int{"haiku": 3, "sonnet": 2, "opus": 1, "fable": 1})
+		fmt.Printf("  %s\n", pills(append([]segment{week}, agents...), " "))
 		fmt.Println()
 	}
 }
