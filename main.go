@@ -29,11 +29,7 @@ type payload struct {
 	ContextWindow struct {
 		Size         int      `json:"context_window_size"`
 		UsedPct      *float64 `json:"used_percentage"`
-		CurrentUsage *struct {
-			Input       int `json:"input_tokens"`
-			CacheCreate int `json:"cache_creation_input_tokens"`
-			CacheRead   int `json:"cache_read_input_tokens"`
-		} `json:"current_usage"`
+		CurrentUsage *usage   `json:"current_usage"`
 	} `json:"context_window"`
 	RateLimits struct {
 		FiveHour *rateLimit `json:"five_hour"`
@@ -41,29 +37,16 @@ type payload struct {
 	} `json:"rate_limits"`
 }
 
+type usage struct {
+	Input       int `json:"input_tokens"`
+	CacheCreate int `json:"cache_creation_input_tokens"`
+	CacheRead   int `json:"cache_read_input_tokens"`
+}
+
 type rateLimit struct {
 	UsedPct  float64 `json:"used_percentage"`
 	ResetsAt int64   `json:"resets_at"`
 }
-
-const (
-	reset = "\033[0m"
-	bold  = "\033[1m"
-)
-
-// xterm-256 palette; tuned in the design pass.
-const (
-	colorLight   = 255
-	colorDark    = 234
-	colorDirBg   = 31
-	colorModelBg = 61
-	colorOK      = 70
-	colorLimitOK = 114
-	colorWarn    = 172
-	colorCrit    = 160
-	colorCostBg  = 238
-	colorCostFg  = 250
-)
 
 func main() {
 	if len(os.Args) > 1 && os.Args[1] == "--demo" {
@@ -88,16 +71,16 @@ func render(p payload, now time.Time) string {
 	if b := gitBranch(dir); b != "" {
 		loc += " " + iconBranch + " " + b
 	}
-	segs := []demoSegment{
-		{loc, colorLight, colorDirBg},
-		{iconRobot + " " + shortModel(p.Model.DisplayName), colorLight, colorModelBg},
+	segs := []segment{
+		{loc, theme.light, theme.dir},
+		{iconRobot + " " + shortModel(p.Model.DisplayName), theme.light, theme.model},
 		contextSegment(p),
 	}
 	if rl := p.RateLimits.FiveHour; rl != nil {
 		segs = append(segs, limitSegment(*rl, now))
 	}
 	if p.Cost.TotalCostUSD > 0 {
-		segs = append(segs, demoSegment{fmt.Sprintf("~%s%.2f", iconDollar, p.Cost.TotalCostUSD), colorCostFg, colorCostBg})
+		segs = append(segs, segment{fmt.Sprintf("~%s%.2f", iconDollar, p.Cost.TotalCostUSD), theme.costFg, theme.costBg})
 	}
 	return powerline(segs, sepRound)
 }
@@ -110,41 +93,41 @@ func shortModel(name string) string {
 	return name
 }
 
-func contextSegment(p payload) demoSegment {
+func contextSegment(p payload) segment {
 	cw := p.ContextWindow
 	if cw.CurrentUsage == nil {
-		return demoSegment{iconGauge + " n/a", colorDark, colorOK}
+		return segment{iconGauge + " n/a", theme.dark, theme.ok}
 	}
 	used := cw.CurrentUsage.Input + cw.CurrentUsage.CacheCreate + cw.CurrentUsage.CacheRead
 	text := iconGauge + " " + humanTokens(used) + "/" + humanTokens(cw.Size)
-	bg := colorOK
+	bg := theme.ok
 	switch {
 	case used >= compactThreshold*2:
-		bg = colorCrit
+		bg = theme.crit
 	case used >= compactThreshold:
-		bg = colorWarn
+		bg = theme.warn
 	}
 	if used >= compactThreshold {
 		text += " " + iconWarn + " /compact"
 	}
-	return demoSegment{text, colorDark, bg}
+	return segment{text, theme.dark, bg}
 }
 
-func limitSegment(rl rateLimit, now time.Time) demoSegment {
+func limitSegment(rl rateLimit, now time.Time) segment {
 	text := fmt.Sprintf("%s %.0f%%", iconClock, rl.UsedPct)
 	if rl.ResetsAt > 0 {
 		if left := time.Unix(rl.ResetsAt, 0).Sub(now); left > 0 {
 			text += " · " + shortDuration(left)
 		}
 	}
-	bg := colorLimitOK
+	bg := theme.limitOK
 	switch {
 	case rl.UsedPct >= 80:
-		bg = colorCrit
+		bg = theme.crit
 	case rl.UsedPct >= 50:
-		bg = colorWarn
+		bg = theme.warn
 	}
-	return demoSegment{text, colorDark, bg}
+	return segment{text, theme.dark, bg}
 }
 
 func humanTokens(n int) string {
