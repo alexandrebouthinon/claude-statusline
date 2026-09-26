@@ -1,7 +1,7 @@
 BIN := $(HOME)/.local/bin/claude-statusline
 SAMPLE := $(HOME)/.claude/statusline-sample.json
 
-.PHONY: build install preview test
+.PHONY: build install preview test demo screenshot
 
 build:
 	CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o claude-statusline .
@@ -14,3 +14,9 @@ preview: build
 
 test:
 	go test ./...
+
+demo: build
+	./claude-statusline --demo
+
+screenshot: build
+	python3 scripts/screenshot.py

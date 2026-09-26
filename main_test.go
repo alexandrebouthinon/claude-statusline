@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -43,4 +44,71 @@ func TestCompactWarning(t *testing.T) {
 	if out := contextSegment(p); !strings.Contains(out.text, "/compact") {
 		t.Errorf("expected compact warning: %q", out.text)
 	}
+}
+
+func TestShortDuration(t *testing.T) {
+	cases := map[time.Duration]string{
+		42 * time.Minute:              "42m",
+		3*time.Hour + 5*time.Minute:   "3h05",
+		76*time.Hour + 10*time.Minute: "3j04h",
+	}
+	for in, want := range cases {
+		if got := shortDuration(in); got != want {
+			t.Errorf("shortDuration(%v) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+func TestModelFamily(t *testing.T) {
+	cases := []struct{ model, parent, want string }{
+		{"haiku", "Opus 5.5", "haiku"},
+		{"claude-sonnet-5", "", "sonnet"},
+		{"inherit", "Opus 5.5 (1M context)", "opus"},
+		{"", "Fable 5.1", "fable"},
+		{"", "", "other"},
+	}
+	for _, c := range cases {
+		if got := modelFamily(c.model, c.parent); got != c.want {
+			t.Errorf("modelFamily(%q, %q) = %q, want %q", c.model, c.parent, got, c.want)
+		}
+	}
+}
+
+func TestRunningAgents(t *testing.T) {
+	t.Setenv("XDG_RUNTIME_DIR", t.TempDir())
+	projects := t.TempDir()
+	p := payload{SessionID: "s1", TranscriptPath: filepath.Join(projects, "s1.jsonl")}
+	p.Model.DisplayName = "Opus 5.5"
+
+	sub := filepath.Join(projects, "s1", "subagents")
+	os.MkdirAll(sub, 0o700)
+	os.WriteFile(filepath.Join(sub, "agent-a1.meta.json"), []byte(`{"model":"haiku"}`), 0o600)
+	os.WriteFile(filepath.Join(sub, "agent-a2.meta.json"), []byte(`{}`), 0o600)
+
+	for _, id := range []string{"a1", "a2"} {
+		hook(t, `{"hook_event_name":"SubagentStart","session_id":"s1","agent_id":"`+id+`"}`)
+	}
+	got := runningAgents(p, time.Now())
+	if got["haiku"] != 1 || got["opus"] != 1 {
+		t.Fatalf("after start: %v", got)
+	}
+
+	hook(t, `{"hook_event_name":"SubagentStop","session_id":"s1","agent_id":"a1"}`)
+	if got := runningAgents(p, time.Now()); got["haiku"] != 0 || got["opus"] != 1 {
+		t.Fatalf("after stop: %v", got)
+	}
+	if got := runningAgents(p, time.Now().Add(time.Hour)); len(got) != 0 {
+		t.Fatalf("stale markers kept: %v", got)
+	}
+}
+
+func hook(t *testing.T, input string) {
+	t.Helper()
+	r, w, _ := os.Pipe()
+	w.WriteString(input)
+	w.Close()
+	stdin := os.Stdin
+	os.Stdin = r
+	defer func() { os.Stdin = stdin }()
+	runHook()
 }

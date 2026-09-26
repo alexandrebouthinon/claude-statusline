@@ -6,32 +6,28 @@ import (
 	"time"
 )
 
-// runDemo prints every palette in normal, warning and critical states.
+// runDemo prints the current theme in a few typical session states.
 func runDemo() {
 	now := time.Unix(1_790_000_000, 0)
-	state := func(ctx int, pct float64) payload {
+	state := func(model string, ctx int, five, week float64, agents map[string]int, cost float64) string {
 		var p payload
 		p.Workspace.CurrentDir, _ = os.Getwd()
-		p.Model.DisplayName = "Opus 5.5 (1M context)"
-		p.Cost.TotalCostUSD = 0.67
+		p.Model.DisplayName = model
+		p.Cost.TotalCostUSD = cost
 		p.ContextWindow.Size = 1_000_000
 		p.ContextWindow.CurrentUsage = &usage{CacheRead: ctx}
-		p.RateLimits.FiveHour = &rateLimit{UsedPct: pct, ResetsAt: now.Add(3*time.Hour + 54*time.Minute).Unix()}
-		return p
+		p.RateLimits.FiveHour = &rateLimit{UsedPct: five, ResetsAt: now.Add(3*time.Hour + 54*time.Minute).Unix()}
+		p.RateLimits.SevenDay = &rateLimit{UsedPct: week, ResetsAt: now.Add(76 * time.Hour).Unix()}
+		segs := segments(p, now)
+		// Agent pills normally come from hook markers; inject them before the cost pill.
+		last := len(segs) - 1
+		segs = append(segs[:last], append(agentSegments(agents), segs[last])...)
+		return pills(segs, " ")
 	}
-	states := []payload{state(46_000, 25), state(124_000, 62), state(230_000, 91)}
-
-	for i, pal := range palettes {
-		theme = pal
-		fmt.Printf("%s%d · %s%s\n", bold, i+1, pal.name, reset)
-		for _, p := range states {
-			fmt.Printf("  %s\n", render(p, now))
-		}
-		week := limitSegment(rateLimit{UsedPct: 41, ResetsAt: now.Add(76 * time.Hour).Unix()}, now, iconWeek, theme.week)
-		agents := agentSegments(map[string]int{"haiku": 3, "sonnet": 2, "opus": 1, "fable": 1})
-		fmt.Printf("  %s\n", pills(append([]segment{week}, agents...), " "))
-		fmt.Println()
-	}
+	fmt.Println(state("Opus 5.5 (1M context)", 46_000, 25, 12, nil, 0.67))
+	fmt.Println(state("Sonnet 5", 88_000, 62, 41, map[string]int{"haiku": 3, "sonnet": 1}, 2.14))
+	fmt.Println(state("Opus 5.5 (1M context)", 124_000, 71, 58, map[string]int{"opus": 1, "fable": 1}, 4.80))
+	fmt.Println(state("Fable 5.1", 230_000, 91, 83, nil, 9.35))
 }
 
 // runGlyphDemo prints candidate glyphs for each segment role, lettered for picking.

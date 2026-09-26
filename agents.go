@@ -47,6 +47,9 @@ func runHook() {
 
 // runningAgents counts live subagents per model family (haiku, sonnet, opus…).
 func runningAgents(p payload, now time.Time) map[string]int {
+	if p.SessionID == "" {
+		return nil
+	}
 	entries, err := os.ReadDir(stateDir(p.SessionID))
 	if err != nil {
 		return nil
