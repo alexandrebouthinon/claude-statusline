@@ -22,8 +22,10 @@ type payload struct {
 	Workspace struct {
 		CurrentDir string `json:"current_dir"`
 	} `json:"workspace"`
-	Cwd  string `json:"cwd"`
-	Cost struct {
+	Cwd            string `json:"cwd"`
+	SessionID      string `json:"session_id"`
+	TranscriptPath string `json:"transcript_path"`
+	Cost           struct {
 		TotalCostUSD float64 `json:"total_cost_usd"`
 	} `json:"cost"`
 	ContextWindow struct {
@@ -51,6 +53,10 @@ type rateLimit struct {
 func main() {
 	if len(os.Args) > 1 && os.Args[1] == "--glyphs" {
 		runGlyphDemo()
+		return
+	}
+	if len(os.Args) > 1 && os.Args[1] == "--hook" {
+		runHook()
 		return
 	}
 	if len(os.Args) > 1 && os.Args[1] == "--caps" {
@@ -89,7 +95,13 @@ func segments(p payload, now time.Time) []segment {
 		contextSegment(p),
 	}
 	if rl := p.RateLimits.FiveHour; rl != nil {
-		segs = append(segs, limitSegment(*rl, now))
+		segs = append(segs, limitSegment(*rl, now, iconLimit))
+	}
+	if rl := p.RateLimits.SevenDay; rl != nil {
+		segs = append(segs, limitSegment(*rl, now, iconWeek))
+	}
+	if s, ok := agentsSegment(runningAgents(p, now)); ok {
+		segs = append(segs, s)
 	}
 	if p.Cost.TotalCostUSD > 0 {
 		segs = append(segs, segment{fmt.Sprintf("~%s%.2f", iconDollar, p.Cost.TotalCostUSD), theme.costFg, theme.costBg})
@@ -125,8 +137,8 @@ func contextSegment(p payload) segment {
 	return segment{text, theme.dark, bg}
 }
 
-func limitSegment(rl rateLimit, now time.Time) segment {
-	text := fmt.Sprintf("%s %.0f%%", iconLimit, rl.UsedPct)
+func limitSegment(rl rateLimit, now time.Time, icon string) segment {
+	text := fmt.Sprintf("%s %.0f%%", icon, rl.UsedPct)
 	if rl.ResetsAt > 0 {
 		if left := time.Unix(rl.ResetsAt, 0).Sub(now); left > 0 {
 			text += " · " + shortDuration(left)
@@ -155,6 +167,9 @@ func humanTokens(n int) string {
 func shortDuration(d time.Duration) string {
 	h := int(d.Hours())
 	m := int(d.Minutes()) % 60
+	if h >= 24 {
+		return fmt.Sprintf("%dj%02dh", h/24, h%24)
+	}
 	if h > 0 {
 		return fmt.Sprintf("%dh%02d", h, m)
 	}

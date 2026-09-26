@@ -17,6 +17,8 @@ const (
 	iconModel    = "\U000f0674"
 	iconContext  = "\uf1c0"
 	iconLimit    = "\uf252"
+	iconWeek     = "\uf073"
+	iconAgents   = "\U000f06a9"
 	iconDollar   = ""
 	iconWarn     = ""
 )
@@ -33,14 +35,15 @@ type palette struct {
 	dir, model              string
 	ok, limitOK, warn, crit string
 	costBg, costFg          string
+	agents                  string
 }
 
 var palettes = []palette{
-	{"p10k", "#eeeeee", "#1c1c1c", "#0087af", "#5f5faf", "#5faf00", "#87d787", "#d78700", "#d70000", "#444444", "#bcbcbc"},
-	{"Catppuccin Mocha", "#cdd6f4", "#1e1e2e", "#89b4fa", "#cba6f7", "#a6e3a1", "#94e2d5", "#fab387", "#f38ba8", "#45475a", "#cdd6f4"},
-	{"Tokyo Night", "#c0caf5", "#1a1b26", "#7aa2f7", "#bb9af7", "#9ece6a", "#7dcfff", "#e0af68", "#f7768e", "#414868", "#c0caf5"},
-	{"Nord", "#eceff4", "#2e3440", "#5e81ac", "#b48ead", "#a3be8c", "#88c0d0", "#ebcb8b", "#bf616a", "#3b4252", "#d8dee9"},
-	{"Gruvbox", "#fbf1c7", "#282828", "#458588", "#b16286", "#98971a", "#689d6a", "#d79921", "#cc241d", "#504945", "#ebdbb2"},
+	{"p10k", "#eeeeee", "#1c1c1c", "#0087af", "#5f5faf", "#5faf00", "#87d787", "#d78700", "#d70000", "#444444", "#bcbcbc", "#d75f87"},
+	{"Catppuccin Mocha", "#cdd6f4", "#1e1e2e", "#89b4fa", "#cba6f7", "#a6e3a1", "#94e2d5", "#fab387", "#f38ba8", "#45475a", "#cdd6f4", "#f5c2e7"},
+	{"Tokyo Night", "#c0caf5", "#1a1b26", "#7aa2f7", "#bb9af7", "#9ece6a", "#7dcfff", "#e0af68", "#f7768e", "#414868", "#c0caf5", "#73daca"},
+	{"Nord", "#eceff4", "#2e3440", "#5e81ac", "#b48ead", "#a3be8c", "#88c0d0", "#ebcb8b", "#bf616a", "#3b4252", "#d8dee9", "#8fbcbb"},
+	{"Gruvbox", "#fbf1c7", "#282828", "#458588", "#b16286", "#98971a", "#689d6a", "#d79921", "#cc241d", "#504945", "#ebdbb2", "#d65d0e"},
 }
 
 var theme = palettes[2] // Tokyo Night
