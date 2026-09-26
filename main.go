@@ -53,6 +53,10 @@ func main() {
 		runGlyphDemo()
 		return
 	}
+	if len(os.Args) > 1 && os.Args[1] == "--caps" {
+		runCapsDemo()
+		return
+	}
 	if len(os.Args) > 1 && os.Args[1] == "--demo" {
 		runDemo()
 		return
@@ -66,6 +70,10 @@ func main() {
 }
 
 func render(p payload, now time.Time) string {
+	return pills(segments(p, now), " ")
+}
+
+func segments(p payload, now time.Time) []segment {
 	dir := p.Workspace.CurrentDir
 	if dir == "" {
 		dir = p.Cwd
@@ -86,7 +94,7 @@ func render(p payload, now time.Time) string {
 	if p.Cost.TotalCostUSD > 0 {
 		segs = append(segs, segment{fmt.Sprintf("~%s%.2f", iconDollar, p.Cost.TotalCostUSD), theme.costFg, theme.costBg})
 	}
-	return powerline(segs, sepRound)
+	return segs
 }
 
 // shortModel drops the "(1M context)" suffix, already shown by the context segment.

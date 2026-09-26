@@ -102,3 +102,29 @@ func textOn(bg string) string {
 	}
 	return theme.light
 }
+
+const (
+	capRound = ""
+	capSolid = ""
+	capSlant = ""
+)
+
+// capLeft draws an opening cap in the first segment's color.
+func capLeft(segs []segment, cap string) string {
+	if len(segs) == 0 {
+		return ""
+	}
+	return reset + fgHex(segs[0].bg) + cap
+}
+
+// pills renders each segment as a standalone rounded pill.
+func pills(segs []segment, gap string) string {
+	var b strings.Builder
+	for i, s := range segs {
+		if i > 0 {
+			b.WriteString(gap)
+		}
+		b.WriteString(fgHex(s.bg) + capRound + bgHex(s.bg) + fgHex(textOn(s.bg)) + " " + s.text + " " + reset + fgHex(s.bg) + sepRound + reset)
+	}
+	return b.String()
+}

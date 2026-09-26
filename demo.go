@@ -54,3 +54,28 @@ func runGlyphDemo() {
 		fmt.Println()
 	}
 }
+
+// runCapsDemo prints separator and cap variants, lettered for picking.
+func runCapsDemo() {
+	now := time.Unix(1_790_000_000, 0)
+	var p payload
+	p.Workspace.CurrentDir, _ = os.Getwd()
+	p.Model.DisplayName = "Opus 5.5 (1M context)"
+	p.Cost.TotalCostUSD = 0.67
+	p.ContextWindow.Size = 1_000_000
+	p.ContextWindow.CurrentUsage = &usage{CacheRead: 46_000}
+	p.RateLimits.FiveHour = &rateLimit{UsedPct: 25, ResetsAt: now.Add(3*time.Hour + 54*time.Minute).Unix()}
+	s := segments(p, now)
+
+	variants := []struct{ name, out string }{
+		{"actuel, arrondi à droite", powerline(s, sepRound)},
+		{"arrondi des deux côtés", capLeft(s, capRound) + powerline(s, sepRound)},
+		{"pilules séparées", pills(s, " ")},
+		{"pilules serrées", pills(s, "")},
+		{"flèches p10k", capLeft(s, capSolid) + powerline(s, sepSolid)},
+		{"biseaux", capLeft(s, capSlant) + powerline(s, sepSlant)},
+	}
+	for i, v := range variants {
+		fmt.Printf("%c  %s\n   %s\n\n", 'A'+i, v.name, v.out)
+	}
+}
