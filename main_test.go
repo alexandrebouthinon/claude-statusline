@@ -97,6 +97,10 @@ func TestRunningAgents(t *testing.T) {
 	if got := runningAgents(p, time.Now()); got["haiku"] != 0 || got["opus"] != 1 {
 		t.Fatalf("after stop: %v", got)
 	}
+	hook(t, `{"hook_event_name":"PostToolUse","session_id":"s1","tool_name":"TaskStop","tool_input":{"task_id":"a2"}}`)
+	if got := runningAgents(p, time.Now()); len(got) != 0 {
+		t.Fatalf("after TaskStop: %v", got)
+	}
 	if got := runningAgents(p, time.Now().Add(time.Hour)); len(got) != 0 {
 		t.Fatalf("stale markers kept: %v", got)
 	}

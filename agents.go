@@ -18,6 +18,10 @@ type hookInput struct {
 	Event     string `json:"hook_event_name"`
 	SessionID string `json:"session_id"`
 	AgentID   string `json:"agent_id"`
+	ToolName  string `json:"tool_name"`
+	ToolInput struct {
+		TaskID string `json:"task_id"`
+	} `json:"tool_input"`
 }
 
 func stateDir(sessionID string) string {
@@ -28,10 +32,18 @@ func stateDir(sessionID string) string {
 	return filepath.Join(base, "claude-statusline", sessionID)
 }
 
-// runHook tracks running subagents: SubagentStart drops a marker, SubagentStop removes it.
+// runHook tracks running subagents: SubagentStart drops a marker, SubagentStop
+// removes it. A subagent killed with TaskStop never fires SubagentStop, so the
+// PostToolUse of TaskStop removes its marker too (the task ID is the agent ID).
 func runHook() {
 	var in hookInput
-	if err := json.NewDecoder(os.Stdin).Decode(&in); err != nil || in.SessionID == "" || in.AgentID == "" {
+	if err := json.NewDecoder(os.Stdin).Decode(&in); err != nil || in.SessionID == "" {
+		return
+	}
+	if in.Event == "PostToolUse" && in.ToolName == "TaskStop" {
+		in.AgentID, in.Event = in.ToolInput.TaskID, "SubagentStop"
+	}
+	if in.AgentID == "" {
 		return
 	}
 	dir := stateDir(in.SessionID)

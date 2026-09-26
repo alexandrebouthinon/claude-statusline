@@ -42,12 +42,13 @@ Then add this to `~/.claude/settings.json`:
   },
   "hooks": {
     "SubagentStart": [{ "hooks": [{ "type": "command", "command": "~/.local/bin/claude-statusline --hook", "timeout": 5 }] }],
-    "SubagentStop":  [{ "hooks": [{ "type": "command", "command": "~/.local/bin/claude-statusline --hook", "timeout": 5 }] }]
+    "SubagentStop":  [{ "hooks": [{ "type": "command", "command": "~/.local/bin/claude-statusline --hook", "timeout": 5 }] }],
+    "PostToolUse":   [{ "matcher": "TaskStop", "hooks": [{ "type": "command", "command": "~/.local/bin/claude-statusline --hook", "timeout": 5 }] }]
   }
 }
 ```
 
-The two hooks are only needed for the team row, because Claude Code does not pass running subagents to the status line.
+The hooks are only needed for the team row, because Claude Code does not pass running subagents to the status line.
 Each hook drops or removes a marker under `$XDG_RUNTIME_DIR/claude-statusline/<session>/`.
 The status line reads each agent's model from its transcript metadata.
 
