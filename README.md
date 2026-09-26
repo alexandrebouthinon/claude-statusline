@@ -13,11 +13,11 @@ It starts in about a millisecond, uses no `jq` and makes no API calls, so it can
 |------|---------|
 | Location | Directory and git branch, read from `.git/HEAD` without starting `git` |
 | Model | Active model, colored by family |
-|  Context | Tokens used out of the window size. Turns orange at 100k with a `/compact` reminder, and red at 200k |
+| Context | Tokens used out of the window size. Turns orange at 100k with a `/compact` reminder, and red at 200k |
 | 5h limit | Share of the 5-hour quota used, and time left before it resets |
 | Weekly limit | Share of the 7-day quota used, and time left before it resets |
 | Agents | Subagents running right now, counted per model family. Each family keeps its model color |
-|  Cost | Session cost, prefixed with `~` because it is an API-equivalent estimate, not an invoice |
+| Cost | Session cost, prefixed with `~` because it is an API-equivalent estimate, not an invoice |
 
 Model colors (Tokyo Night): **Haiku** teal · **Sonnet** orange · **Opus** purple · **Fable** pink.
 
