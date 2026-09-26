@@ -47,16 +47,29 @@ type rateLimit struct {
 }
 
 const (
-	reset  = "\033[0m"
-	bold   = "\033[1m"
-	dim    = "\033[2m"
-	red    = "\033[31m"
-	green  = "\033[32m"
-	yellow = "\033[33m"
-	cyan   = "\033[36m"
+	reset = "\033[0m"
+	bold  = "\033[1m"
+)
+
+// xterm-256 palette; tuned in the design pass.
+const (
+	colorLight   = 255
+	colorDark    = 234
+	colorDirBg   = 31
+	colorModelBg = 61
+	colorOK      = 70
+	colorLimitOK = 114
+	colorWarn    = 172
+	colorCrit    = 160
+	colorCostBg  = 238
+	colorCostFg  = 250
 )
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "--demo" {
+		runDemo()
+		return
+	}
 	var p payload
 	if err := json.NewDecoder(bufio.NewReader(os.Stdin)).Decode(&p); err != nil {
 		fmt.Print("statusline: bad input")
@@ -71,59 +84,67 @@ func render(p payload, now time.Time) string {
 		dir = p.Cwd
 	}
 
-	parts := []string{bold + filepath.Base(dir) + reset}
+	loc := iconFolder + " " + filepath.Base(dir)
 	if b := gitBranch(dir); b != "" {
-		parts[0] += " " + dim + b + reset
+		loc += " " + iconBranch + " " + b
 	}
-	parts = append(parts, cyan+p.Model.DisplayName+reset, contextSegment(p))
+	segs := []demoSegment{
+		{loc, colorLight, colorDirBg},
+		{iconRobot + " " + shortModel(p.Model.DisplayName), colorLight, colorModelBg},
+		contextSegment(p),
+	}
 	if rl := p.RateLimits.FiveHour; rl != nil {
-		parts = append(parts, "5h "+limitSegment(*rl, now))
+		segs = append(segs, limitSegment(*rl, now))
 	}
 	if p.Cost.TotalCostUSD > 0 {
-		parts = append(parts, fmt.Sprintf("%s~$%.2f%s", dim, p.Cost.TotalCostUSD, reset))
+		segs = append(segs, demoSegment{fmt.Sprintf("~%s%.2f", iconDollar, p.Cost.TotalCostUSD), colorCostFg, colorCostBg})
 	}
-	return strings.Join(parts, " │ ")
+	return powerline(segs, sepRound)
 }
 
-func contextSegment(p payload) string {
+// shortModel drops the "(1M context)" suffix, already shown by the context segment.
+func shortModel(name string) string {
+	if i := strings.Index(name, " ("); i > 0 {
+		return name[:i]
+	}
+	return name
+}
+
+func contextSegment(p payload) demoSegment {
 	cw := p.ContextWindow
 	if cw.CurrentUsage == nil {
-		return "ctx n/a"
+		return demoSegment{iconGauge + " n/a", colorDark, colorOK}
 	}
 	used := cw.CurrentUsage.Input + cw.CurrentUsage.CacheCreate + cw.CurrentUsage.CacheRead
-	color := green
+	text := iconGauge + " " + humanTokens(used) + "/" + humanTokens(cw.Size)
+	bg := colorOK
 	switch {
 	case used >= compactThreshold*2:
-		color = red
+		bg = colorCrit
 	case used >= compactThreshold:
-		color = yellow
+		bg = colorWarn
 	}
-	s := fmt.Sprintf("ctx %s%s%s/%s", color, humanTokens(used), reset, humanTokens(cw.Size))
 	if used >= compactThreshold {
-		s += " " + color + "⚠ /compact" + reset
+		text += " " + iconWarn + " /compact"
 	}
-	return s
+	return demoSegment{text, colorDark, bg}
 }
 
-func limitSegment(rl rateLimit, now time.Time) string {
-	color := pctColor(rl.UsedPct)
-	s := fmt.Sprintf("%s%.0f%%%s", color, rl.UsedPct, reset)
+func limitSegment(rl rateLimit, now time.Time) demoSegment {
+	text := fmt.Sprintf("%s %.0f%%", iconClock, rl.UsedPct)
 	if rl.ResetsAt > 0 {
 		if left := time.Unix(rl.ResetsAt, 0).Sub(now); left > 0 {
-			s += " " + dim + shortDuration(left) + reset
+			text += " · " + shortDuration(left)
 		}
 	}
-	return s
-}
-
-func pctColor(pct float64) string {
+	bg := colorLimitOK
 	switch {
-	case pct >= 80:
-		return red
-	case pct >= 50:
-		return yellow
+	case rl.UsedPct >= 80:
+		bg = colorCrit
+	case rl.UsedPct >= 50:
+		bg = colorWarn
 	}
-	return green
+	return demoSegment{text, colorDark, bg}
 }
 
 func humanTokens(n int) string {

@@ -27,7 +27,7 @@ func TestRenderSample(t *testing.T) {
 		t.Fatal(err)
 	}
 	out := render(p, time.Unix(p.RateLimits.FiveHour.ResetsAt-3600, 0))
-	for _, want := range []string{"Opus 5.5", "42k", "/1M", "22%", "1h00", "~$0.22"} {
+	for _, want := range []string{"Opus 5.5", "42k", "/1M", "22%", "1h00", "0.22"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("output missing %q: %q", want, out)
 		}
@@ -40,7 +40,7 @@ func TestRenderSample(t *testing.T) {
 func TestCompactWarning(t *testing.T) {
 	var p payload
 	_ = json.Unmarshal([]byte(`{"context_window":{"context_window_size":1000000,"current_usage":{"cache_read_input_tokens":120000}}}`), &p)
-	if out := contextSegment(p); !strings.Contains(out, "/compact") {
-		t.Errorf("expected compact warning: %q", out)
+	if out := contextSegment(p); !strings.Contains(out.text, "/compact") {
+		t.Errorf("expected compact warning: %q", out.text)
 	}
 }
